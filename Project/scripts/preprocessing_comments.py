@@ -11,7 +11,10 @@ from configs import punctuations
 from configs import stopwords_kz_path, stopwords_kz_translit_path, stopwords_ru_path
 
 import pandas as pd
+import ast
 import string
+from tqdm import tqdm
+import time
 
 
 def remove_emojis(line):
@@ -60,6 +63,38 @@ def word_tokenize(line):
     return tokenized
 
 
+# def joiner(lst):
+#     list_from_string = ast.literal_eval(lst)
+#     result = ' '.join(list_from_string)
+#
+#     return result
+
+
+def preprocessing(df):
+    df['normalized'] = df['text'].apply(comment_nomalizer)
+    df['tokenized'] = df['normalized'].apply(word_tokenize)
+
+    df['stemmed_lemmed'] = df['tokenized'].apply(remove_punctuation_and_stopwords)
+
+    # df['text_lemm'] = df['stemmed_lemmed'].apply(lambda x: joiner(x))
+    df['text_lemm'] = df['stemmed_lemmed'].apply(lambda x: ' '.join(x))
+
+    # print(df.loc[:, ['text', 'normalized', 'label']].values)
+    # print(df)
+
+    # df = df.dropna()
+
+    df = df[df['stemmed_lemmed'].apply(lambda x: x != [])]
+    df = df[df['text_lemm'].apply(lambda x: x != '')]
+    # df = df.dropna()
+    df = df.drop_duplicates(subset=['stemmed_lemmed'])
+    df = df.dropna(subset=['text', 'label', 'normalized', 'tokenized', 'stemmed_lemmed', 'text_lemm'])
+    # print(df)
+    # print(df)
+
+    return df
+
+
 def most_frequently_words(dataset, top=10, bottom=10):
     word_freq = defaultdict(int)
     for tokens in dataset:
@@ -89,26 +124,22 @@ def main():
     print(f'Shape is {df.shape}')
     print('--------------------')
 
-    df1000 = df.sample(n=1000, ignore_index=True)
+    # df1000 = df.sample(n=1000, ignore_index=True)
+    df1000 = df
     print(f"Распределение классов: positive ({df1000['label'].sum() / df1000.shape[0]}) and negative ({(1 - df1000['label'].sum() / df1000.shape[0])})")
+    # print(df1000)
 
-    df1000['normalized'] = df1000['text'].apply(comment_nomalizer)
-    df1000['tokenized'] = df1000['normalized'].apply(word_tokenize)
+    start_time = time.time()
+    df1000 = preprocessing(df1000)
+    print(f"--- {(time.time() - start_time) / 60} minutes ---")
 
-    df1000['stemmed_lematized'] = df1000['tokenized'].apply(remove_punctuation_and_stopwords)
+    print(df1000.info())
 
-    # print(df1000.loc[:, ['text', 'normalized', 'label']].values)
-    print(df1000)
+    # most_frequently_words(df1000['stemmed_lemmed'], top=10, bottom=10)
 
-    df1000 = df1000.dropna()
-    print(df1000)
-
-    most_frequently_words(df1000['stemmed_lematized'], top=10, bottom=10)
-
-    # df1000_remove_duplicates = df1000_remove_nan.drop_duplicates()
-    # print(df1000_remove_duplicates)
-
-    # print(remove_punctuation_and_stopwords(word_tokenize(comment_nomalizer('Мен сені жақсы көремін.'))))
+    output_filename = f"{comment_filename[:-4]}_normalized.csv"
+    with open(output_filename, 'w', encoding='utf-8') as normalized_file:
+        df1000.to_csv(normalized_file, index=False)
 
 
 if __name__ == '__main__':
