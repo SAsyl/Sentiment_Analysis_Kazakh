@@ -59,4 +59,5 @@
 
 # Дополнительные ссылки
 - Ссылка на [презентацию](https://drive.google.com/file/d/1495mbekmbvRf5bAg0dREpa95mopnw7Tf/view?usp=sharing).
+- Ссылка на [текст](https://drive.google.com/file/d/1asoPUuePuCZFvqRR9aMSWoFdN2GyVwiP/view?usp=sharing).
 - Ссылка на [датасет](https://drive.google.com/file/d/1OBuYdmCz5Ru5JBD8_CdHYeR195DpeM5M/view?usp=sharing).
